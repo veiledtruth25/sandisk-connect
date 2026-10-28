@@ -92,6 +92,20 @@ fun App(vm: AppViewModel = viewModel()) {
         }
     }
 
+    // Media viewer sebagai fullscreen overlay (menggantikan seluruh layar)
+    vm.mediaUrl?.let { url ->
+        val okHttp = vm.mediaOkHttp
+        if (okHttp != null) {
+            MediaViewer(
+                url = url,
+                isVideo = vm.mediaIsVideo,
+                okHttp = okHttp,
+                onBack = { vm.closeMedia() },
+            )
+            return  // skip Scaffold saat viewer aktif
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(

@@ -15,6 +15,7 @@ import id.abimanyu.stickconnect.stick.Stick
 import id.abimanyu.stickconnect.stick.StickClient
 import id.abimanyu.stickconnect.stick.WifiNet
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.io.IOException
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
@@ -50,6 +51,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var saved by mutableStateOf<List<WifiNet>>(emptyList())
         private set
     var wifiBusy by mutableStateOf<String?>(null)
+        private set
+
+    // media viewer
+    var mediaUrl by mutableStateOf<String?>(null)
+        private set
+    var mediaIsVideo by mutableStateOf(false)
+        private set
+    var mediaOkHttp by mutableStateOf<OkHttpClient?>(null)
         private set
 
     init {
@@ -173,6 +182,17 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         c.move(f.path, Paths.join(Paths.parent(f.path), newName))
         files = c.list(path)
     }
+
+    private val videoExt = setOf("mp4","mkv","avi","mov","3gp","webm","m4v","ts","m2ts")
+
+    fun openMedia(file: RemoteFile) {
+        val c = conn ?: return
+        mediaOkHttp = Stick.mediaOkHttp(ctx)
+        mediaIsVideo = file.name.substringAfterLast('.').lowercase() in videoExt
+        mediaUrl = "http://${c.client.host}/files${file.path}"
+    }
+
+    fun closeMedia() { mediaUrl = null }
 
     private fun nameAndSize(uri: Uri): Pair<String, Long> {
         var name = "file"

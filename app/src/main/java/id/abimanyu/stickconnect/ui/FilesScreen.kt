@@ -43,6 +43,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import id.abimanyu.stickconnect.stick.RemoteFile
 
+private val IMAGE_EXT = setOf("jpg","jpeg","png","gif","webp","bmp","heic","heif")
+private val VIDEO_EXT = setOf("mp4","mkv","avi","mov","3gp","webm","m4v","ts","m2ts")
+private fun RemoteFile.isImage() = name.substringAfterLast('.').lowercase() in IMAGE_EXT
+private fun RemoteFile.isVideo() = name.substringAfterLast('.').lowercase() in VIDEO_EXT
+private fun RemoteFile.isMedia() = isImage() || isVideo()
+
 @Composable
 fun FilesScreen(vm: AppViewModel) {
     var pendingDownload by remember { mutableStateOf<RemoteFile?>(null) }
@@ -106,9 +112,10 @@ fun FilesScreen(vm: AppViewModel) {
                     FileRow(
                         f,
                         onOpen = {
-                            if (f.isDir) vm.loadDir(f.path) else {
-                                pendingDownload = f
-                                pickDest.launch(f.name)
+                            when {
+                                f.isDir -> vm.loadDir(f.path)
+                                f.isMedia() -> vm.openMedia(f)
+                                else -> { pendingDownload = f; pickDest.launch(f.name) }
                             }
                         },
                         onDownload = { pendingDownload = f; pickDest.launch(f.name) },

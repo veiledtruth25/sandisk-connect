@@ -9,9 +9,11 @@ import android.net.nsd.NsdServiceInfo
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import okhttp3.OkHttpClient
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.Socket
+import java.util.concurrent.TimeUnit
 import javax.net.SocketFactory
 import kotlin.coroutines.resume
 
@@ -44,6 +46,18 @@ object Stick {
 
     fun rememberHomeIp(ctx: Context, ip: String) {
         if (ip.isNotEmpty() && ip != "0.0.0.0") prefs(ctx).edit().putString("home_ip", ip).apply()
+    }
+
+    /** OkHttpClient siap pakai untuk Coil (gambar) dan ExoPlayer (video). */
+    fun mediaOkHttp(ctx: Context): OkHttpClient {
+        init(ctx)
+        return OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .socketFactory(WifiSocketFactory(ctx.applicationContext))
+            .addInterceptor(auth)
+            .build()
     }
 
     suspend fun connect(ctx: Context): Connection {
