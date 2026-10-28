@@ -8,6 +8,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backup
@@ -15,9 +16,11 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Usb
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -25,6 +28,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -42,7 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import id.abimanyu.stickconnect.BuildConfig
 
 @Composable
 fun StickTheme(content: @Composable () -> Unit) {
@@ -164,6 +170,45 @@ fun App(vm: AppViewModel = viewModel()) {
             password = true,
             onDismiss = { vm.needPassword = false },
             onConfirm = { vm.submitPassword(it) },
+        )
+    }
+
+    // Dialog update otomatis
+    vm.updateInfo?.let { info ->
+        AlertDialog(
+            onDismissRequest = { if (!vm.updateDownloading) vm.dismissUpdate() },
+            title = { Text("Update tersedia") },
+            text = {
+                Column {
+                    Text(
+                        "Versi ${info.versionName} tersedia. " +
+                            "Versi terpasang: ${BuildConfig.VERSION_NAME}.",
+                    )
+                    if (vm.updateDownloading) {
+                        Text(
+                            "Mengunduh… ${vm.updateProgress}%",
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                        LinearProgressIndicator(
+                            progress = { vm.updateProgress / 100f },
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { vm.downloadUpdate() },
+                    enabled = !vm.updateDownloading,
+                ) { Text("Download & Install") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { vm.dismissUpdate() },
+                    enabled = !vm.updateDownloading,
+                ) { Text("Nanti saja") }
+            },
         )
     }
 }

@@ -14,6 +14,9 @@ import id.abimanyu.stickconnect.stick.RemoteFile
 import id.abimanyu.stickconnect.stick.Stick
 import id.abimanyu.stickconnect.stick.StickClient
 import id.abimanyu.stickconnect.stick.WifiNet
+import id.abimanyu.stickconnect.update.AppUpdater
+import id.abimanyu.stickconnect.update.UpdateChecker
+import id.abimanyu.stickconnect.update.UpdateInfo
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import java.io.IOException
@@ -53,6 +56,14 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     var wifiBusy by mutableStateOf<String?>(null)
         private set
 
+    // update otomatis
+    var updateInfo by mutableStateOf<UpdateInfo?>(null)
+        private set
+    var updateDownloading by mutableStateOf(false)
+        private set
+    var updateProgress by mutableStateOf(0)
+        private set
+
     // media viewer
     var mediaUrl by mutableStateOf<String?>(null)
         private set
@@ -64,6 +75,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     init {
         Stick.init(app)
         connect()
+        checkUpdate()
     }
 
     fun connect() {
@@ -193,6 +205,32 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun closeMedia() { mediaUrl = null }
+
+    // ─── Update otomatis ───────────────────────────────────────────────────
+
+    fun checkUpdate() {
+        viewModelScope.launch {
+            try { updateInfo = UpdateChecker.check() } catch (_: Exception) { }
+        }
+    }
+
+    fun dismissUpdate() { updateInfo = null }
+
+    fun downloadUpdate() {
+        val info = updateInfo ?: return
+        if (updateDownloading) return
+        updateDownloading = true
+        updateProgress = 0
+        viewModelScope.launch {
+            try {
+                AppUpdater.downloadAndInstall(ctx, info) { updateProgress = it }
+            } catch (e: Exception) {
+                message = "Gagal download update: ${e.message}"
+            } finally {
+                updateDownloading = false
+            }
+        }
+    }
 
     private fun nameAndSize(uri: Uri): Pair<String, Long> {
         var name = "file"
