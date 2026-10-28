@@ -199,6 +199,39 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         files = c.list(path)
     }
 
+    // ─── Clipboard (cut / copy / paste) ───────────────────────────────────────
+
+    data class ClipItem(val file: RemoteFile, val isCut: Boolean)
+
+    var clipboard by mutableStateOf<ClipItem?>(null)
+        private set
+
+    fun cut(f: RemoteFile) {
+        clipboard = ClipItem(f, isCut = true)
+        message = "\"${f.name}\" siap dipindahkan — buka folder tujuan lalu Tempel"
+    }
+
+    fun copy(f: RemoteFile) {
+        clipboard = ClipItem(f, isCut = false)
+        message = "\"${f.name}\" siap disalin — buka folder tujuan lalu Tempel"
+    }
+
+    fun paste() = op("Gagal tempel") { c ->
+        val clip = clipboard ?: run { message = "Tidak ada file di clipboard"; return@op }
+        val dest = Paths.join(path, clip.file.name)
+        if (clip.isCut) {
+            c.move(clip.file.path, dest)
+            clipboard = null
+            message = "\"${clip.file.name}\" dipindahkan"
+        } else {
+            c.copy(clip.file.path, dest)
+            message = "\"${clip.file.name}\" disalin"
+        }
+        files = c.list(path)
+    }
+
+    fun clearClipboard() { clipboard = null }
+
     private val videoExt = setOf("mp4","mkv","avi","mov","3gp","webm","m4v","ts","m2ts")
     private val imageExt = setOf("jpg","jpeg","png","gif","webp","bmp","heic","heif")
     private fun RemoteFile.isMediaFile() =

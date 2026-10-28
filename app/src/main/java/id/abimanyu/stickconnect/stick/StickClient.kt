@@ -309,7 +309,18 @@ class StickClient(
             .header("Overwrite", "F")
             .build()
         val c = code(req)
-        if (c != 201 && c != 204 && c != 200) throw StickException("Gagal mengganti nama (HTTP $c)")
+        if (c != 201 && c != 204 && c != 200) throw StickException("Gagal memindahkan (HTTP $c)")
+    }
+
+    suspend fun copy(from: String, to: String) {
+        val req = Request.Builder()
+            .url(fileUrl(from))
+            .method("COPY", null)
+            .header("Destination", fileUrl(to).toString())
+            .header("Overwrite", "F")
+            .build()
+        val c = code(req)
+        if (c != 201 && c != 204 && c != 200) throw StickException("Gagal menyalin (HTTP $c)")
     }
 
     private object DateHeader : Interceptor {

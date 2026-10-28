@@ -24,6 +24,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Folder
@@ -119,6 +122,16 @@ fun FilesScreen(vm: AppViewModel) {
                         modifier = Modifier.padding(end = 4.dp),
                     )
                 }
+                // Tombol Tempel (muncul bila ada clipboard)
+                if (vm.clipboard != null) {
+                    IconButton(onClick = { vm.paste() }) {
+                        Icon(
+                            Icons.Filled.ContentPaste,
+                            contentDescription = "Tempel ${if (vm.clipboard?.isCut == true) "(pindahkan)" else "(salin)"}",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
                 // Toggle list/grid
                 IconButton(onClick = { gridMode = !gridMode }) {
                     Icon(
@@ -165,6 +178,8 @@ fun FilesScreen(vm: AppViewModel) {
                                 }
                             },
                             onDownload = { pendingDownload = f; pickDest.launch(f.name) },
+                            onCut = { vm.cut(f) },
+                            onCopy = { vm.copy(f) },
                             onRename = { renaming = f },
                             onDelete = { deleting = f },
                         )
@@ -184,6 +199,8 @@ fun FilesScreen(vm: AppViewModel) {
                                 }
                             },
                             onDownload = { pendingDownload = f; pickDest.launch(f.name) },
+                            onCut = { vm.cut(f) },
+                            onCopy = { vm.copy(f) },
                             onRename = { renaming = f },
                             onDelete = { deleting = f },
                         )
@@ -246,6 +263,8 @@ private fun GridCell(
     baseUrl: String,
     onOpen: () -> Unit,
     onDownload: () -> Unit,
+    onCut: () -> Unit,
+    onCopy: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -375,10 +394,32 @@ private fun GridCell(
         // Dropdown menu (long-press)
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             if (!f.isDir) {
-                DropdownMenuItem(text = { Text("Download ke HP") }, onClick = { menu = false; onDownload() })
+                DropdownMenuItem(
+                    text = { Text("Download ke HP") },
+                    leadingIcon = { Icon(Icons.Filled.Description, null) },
+                    onClick = { menu = false; onDownload() },
+                )
             }
-            DropdownMenuItem(text = { Text("Ganti nama") }, onClick = { menu = false; onRename() })
-            DropdownMenuItem(text = { Text("Hapus") }, onClick = { menu = false; onDelete() })
+            DropdownMenuItem(
+                text = { Text("Cut (Pindahkan)") },
+                leadingIcon = { Icon(Icons.Filled.ContentCut, null) },
+                onClick = { menu = false; onCut() },
+            )
+            DropdownMenuItem(
+                text = { Text("Copy (Salin)") },
+                leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                onClick = { menu = false; onCopy() },
+            )
+            DropdownMenuItem(
+                text = { Text("Ganti nama") },
+                leadingIcon = { Icon(Icons.Filled.MoreVert, null) },
+                onClick = { menu = false; onRename() },
+            )
+            DropdownMenuItem(
+                text = { Text("Hapus") },
+                leadingIcon = { Icon(Icons.Filled.Description, null) },
+                onClick = { menu = false; onDelete() },
+            )
         }
     }
 }
@@ -390,6 +431,8 @@ private fun FileRow(
     f: RemoteFile,
     onOpen: () -> Unit,
     onDownload: () -> Unit,
+    onCut: () -> Unit,
+    onCopy: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
 ) {
@@ -416,10 +459,32 @@ private fun FileRow(
                 IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, contentDescription = "Menu") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     if (!f.isDir) {
-                        DropdownMenuItem(text = { Text("Download ke HP") }, onClick = { menu = false; onDownload() })
+                        DropdownMenuItem(
+                            text = { Text("Download ke HP") },
+                            leadingIcon = { Icon(Icons.Filled.Description, null) },
+                            onClick = { menu = false; onDownload() },
+                        )
                     }
-                    DropdownMenuItem(text = { Text("Ganti nama") }, onClick = { menu = false; onRename() })
-                    DropdownMenuItem(text = { Text("Hapus") }, onClick = { menu = false; onDelete() })
+                    DropdownMenuItem(
+                        text = { Text("Cut (Pindahkan)") },
+                        leadingIcon = { Icon(Icons.Filled.ContentCut, null) },
+                        onClick = { menu = false; onCut() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Copy (Salin)") },
+                        leadingIcon = { Icon(Icons.Filled.ContentCopy, null) },
+                        onClick = { menu = false; onCopy() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Ganti nama") },
+                        leadingIcon = { Icon(Icons.Filled.MoreVert, null) },
+                        onClick = { menu = false; onRename() },
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Hapus") },
+                        leadingIcon = { Icon(Icons.Filled.Description, null) },
+                        onClick = { menu = false; onDelete() },
+                    )
                 }
             }
         },
