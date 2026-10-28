@@ -71,6 +71,10 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var mediaOkHttp by mutableStateOf<OkHttpClient?>(null)
         private set
+    var mediaFiles by mutableStateOf<List<RemoteFile>>(emptyList())
+        private set
+    var mediaIndex by mutableStateOf(0)
+        private set
 
     init {
         Stick.init(app)
@@ -196,15 +200,46 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private val videoExt = setOf("mp4","mkv","avi","mov","3gp","webm","m4v","ts","m2ts")
+    private val imageExt = setOf("jpg","jpeg","png","gif","webp","bmp","heic","heif")
+    private fun RemoteFile.isMediaFile() =
+        name.substringAfterLast('.').lowercase().let { it in videoExt || it in imageExt }
 
-    fun openMedia(file: RemoteFile) {
+    fun openMedia(file: RemoteFile, allFiles: List<RemoteFile> = files) {
         val c = conn ?: return
+        val mediaList = allFiles.filter { it.isMediaFile() }
+        val idx = mediaList.indexOfFirst { it.path == file.path }.coerceAtLeast(0)
+        mediaFiles = mediaList
+        mediaIndex = idx
         mediaOkHttp = Stick.mediaOkHttp(ctx)
+        showMediaAt(idx, c)
+    }
+
+    fun mediaPrev() {
+        val c = conn ?: return
+        if (mediaIndex > 0) {
+            mediaIndex--
+            showMediaAt(mediaIndex, c)
+        }
+    }
+
+    fun mediaNext() {
+        val c = conn ?: return
+        if (mediaIndex < mediaFiles.size - 1) {
+            mediaIndex++
+            showMediaAt(mediaIndex, c)
+        }
+    }
+
+    private fun showMediaAt(idx: Int, c: Stick.Connection) {
+        val file = mediaFiles.getOrNull(idx) ?: return
         mediaIsVideo = file.name.substringAfterLast('.').lowercase() in videoExt
         mediaUrl = "http://${c.client.host}/files${file.path}"
     }
 
-    fun closeMedia() { mediaUrl = null }
+    fun closeMedia() {
+        mediaUrl = null
+        mediaFiles = emptyList()
+    }
 
     // ─── Update otomatis ───────────────────────────────────────────────────
 

@@ -106,6 +106,11 @@ fun App(vm: AppViewModel = viewModel()) {
                 url = url,
                 isVideo = vm.mediaIsVideo,
                 okHttp = okHttp,
+                fileName = vm.mediaFiles.getOrNull(vm.mediaIndex)?.name ?: "",
+                hasPrev = vm.mediaIndex > 0,
+                hasNext = vm.mediaIndex < vm.mediaFiles.size - 1,
+                onPrev = { vm.mediaPrev() },
+                onNext = { vm.mediaNext() },
                 onBack = { vm.closeMedia() },
             )
             return  // skip Scaffold saat viewer aktif

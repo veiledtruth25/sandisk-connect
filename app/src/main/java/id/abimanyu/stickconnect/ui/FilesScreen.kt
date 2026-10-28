@@ -114,7 +114,7 @@ fun FilesScreen(vm: AppViewModel) {
                         onOpen = {
                             when {
                                 f.isDir -> vm.loadDir(f.path)
-                                f.isMedia() -> vm.openMedia(f)
+                                f.isMedia() -> vm.openMedia(f, vm.files)
                                 else -> { pendingDownload = f; pickDest.launch(f.name) }
                             }
                         },
