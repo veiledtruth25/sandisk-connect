@@ -1,6 +1,7 @@
 package id.abimanyu.stickconnect.ui
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
@@ -49,6 +50,9 @@ fun MediaViewer(
     okHttp: OkHttpClient,
     onBack: () -> Unit,
 ) {
+    // Tangkap tombol back sistem supaya tidak langsung close app
+    BackHandler { onBack() }
+
     Box(
         Modifier
             .fillMaxSize()
